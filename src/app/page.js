@@ -2,32 +2,48 @@
 import { useState } from "react";
 
 export default function Home() {
-
   const [flashcards, setFlashcards] = useState([])
   const [topic, setTopic] = useState('')
   const [loading, setLoading] = useState(false)
-
+  const [error, setError] = useState(null)
 
   const generateFlashcards = async (event) => {
     event.preventDefault()
     setLoading(true)
-    const response = await fetch('/api/word-gen', {
-      method: 'POST',
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        topic: topic,
+    setError(null)
+    try {
+      const response = await fetch('/api/world-gen', {
+        method: 'POST',
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          topic: topic,
+        })
       })
-    })
 
-    const flashcardsData = await response.json()
-    setFlashcards(flashcardsData)
-    setLoading(false)
+      if (!response.ok) {
+        throw new Error('Failed to generate flashcards')
+      }
+
+      const flashcardsData = await response.json()
+      if (Array.isArray(flashcardsData)) {
+        setFlashcards(flashcardsData)
+      } else {
+        throw new Error('Invalid response format')
+      }
+    } catch (err) {
+      setError(err.message)
+      setFlashcards([])
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
     <form onSubmit={generateFlashcards} className="flex flex-col gap-4 p-4">
       <h1 className="text-2xl font-bold">Create Flash Card</h1>
-      <input type="text" placeholder="กรอกหัวข้อ Flash Card"
+      <input 
+        type="text" 
+        placeholder="กรอกหัวข้อ Flash Card"
         name="topic"
         onChange={(event) => setTopic(event.target.value)}
         value={topic}
@@ -35,8 +51,9 @@ export default function Home() {
       <button type="submit" disabled={loading}>
         {loading ? 'Loading..' : 'สร้าง Flash Card'}
       </button>
-      คุณเลือกหัวข้อ {topic}
-      {flashcards ?
+      {error && <div className="text-red-500">{error}</div>}
+      {topic && <div>คุณเลือกหัวข้อ {topic}</div>}
+      {Array.isArray(flashcards) && flashcards.length > 0 && (
         <div className="flex flex-wrap">
           {flashcards.map((flashcard) => (
             <div key={flashcard.id} className="w-1/2 p-2">
@@ -45,8 +62,8 @@ export default function Home() {
               </div>
             </div>
           ))}
-        </div> : ''}
-
+        </div>
+      )}
     </form>
   );
 }
