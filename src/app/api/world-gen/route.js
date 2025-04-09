@@ -1,12 +1,5 @@
 import OpenAI from 'openai'
 
-console.log('API Key exists:', !!process.env.OPENAI_API_KEY)
-console.log('API Key length:', process.env.OPENAI_API_KEY?.length || 0)
-
-if (!process.env.OPENAI_API_KEY) {
-  throw new Error('Missing OPENAI_API_KEY environment variable')
-}
-
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY
 })
